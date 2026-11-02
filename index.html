@@ -42,7 +42,55 @@ select,input{font:inherit;background:var(--sf);color:var(--tx);border:1px solid 
 .md{background:var(--sf);border-radius:24px;padding:18px;width:min(420px,100%);display:grid;gap:8px}.ma{display:flex;gap:8px;justify-content:flex-end}
 details{background:var(--sf);border-radius:16px;padding:10px 14px;margin-bottom:8px}summary{cursor:pointer;font-weight:500}li{margin:4px 0}
 @media(max-width:820px){.shell{flex-direction:column;padding:10px}aside{width:100%;height:auto;position:static;flex-direction:row;flex-wrap:wrap;align-items:center;border-radius:22px;padding:12px}.logo{padding:0 8px}#nav{flex-direction:row;overflow-x:auto;max-width:100%}.side-cd{margin:0 0 0 auto;padding:8px 12px}h1{font-size:28px}}
-</style></head><body>
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .wrap {
+    width: 100%;
+    padding: 0 14px;
+    box-sizing: border-box;
+  }
+
+  header {
+    padding: 18px 0;
+  }
+
+  h1 {
+    font-size: 24px;
+    line-height: 1.2;
+  }
+
+  .grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  button {
+    min-height: 44px;
+  }
+
+  .card {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+}</style></head><body>
 <div class="shell"><aside><div class="logo">plano<b>.</b>enem</div><div id="nav"></div><div class="side-cd"><div class="cd" id="cd"></div><div class="mu" id="cd2"></div><div class="mu">prova em 30/11/2027</div></div></aside>
 <div class="mn"><div class="top"><div><h1>Estude com ritmo<br>até o ENEM</h1><div class="mu">Segunda a sábado para estudar, domingo para simulado e revisão.</div></div><div style="display:grid;gap:8px;justify-items:end"><div id="acct"></div><div id="cal"></div></div></div><main id="app"></main></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
