@@ -1,3 +1,4 @@
+```
 <!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Plano ENEM 2027</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -44,6 +45,7 @@ details{background:var(--sf);border-radius:16px;padding:10px 14px;margin-bottom:
 </style></head><body>
 <div class="shell"><aside><div class="logo">plano<b>.</b>enem</div><div id="nav"></div><div class="side-cd"><div class="cd" id="cd"></div><div class="mu" id="cd2"></div><div class="mu">prova em 30/11/2027</div></div></aside>
 <div class="mn"><div class="top"><div><h1>Estude com ritmo<br>até o ENEM</h1><div class="mu">Segunda a sábado para estudar, domingo para simulado e revisão.</div></div><div id="cal"></div></div><main id="app"></main></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 const D={LP:["Língua Portuguesa","#e03131"],LIT:["Literatura","#e67700"],RED:["Redação","#c2255c"],ART:["Artes e Ed. Física","#ae3ec9"],LEM:["Inglês/Espanhol","#7048e8"],INF:["Informática","#1c7ed6"],MAT:["Matemática","#0c8599"],FIS:["Física","#1864ab"],QUI:["Química","#2f9e44"],BIO:["Biologia","#74b816"],HIS:["História","#d9480f"],GEO:["Geografia","#9c6b1f"],FSO:["Filosofia e Sociologia","#868e96"],SIM:["Simulado","#495057"]};
@@ -76,8 +78,49 @@ for(let w=1;w<=56;w++){const rev=w>54,L=[];
  dy.forEach((a,d)=>a.forEach(k=>{const n=P[k]++,q=Q[k],ti=q[n%q.length],cy=Math.floor(n/q.length);G.push({id:`w${w}d${d}${k}`,w,d,k,ck:k+"#"+ti,t:TP[k][ti].t,i:TP[k][ti].i,m:rev?"Questões":MD[[1,0,2,0][cy%4]],r:rev})}));
  G.push({id:`w${w}d6SIM`,w,d:6,k:"SIM",t:rev?"Simulado final + revisão dos erros":"Simulado semanal + revisão dos erros",i:"M",m:"Questões"})}
 G.push({id:"w57d0SIM",w:57,d:0,k:"SIM",t:"Revisão leve e descanso",i:"M",m:"Leitura"},{id:"w57d1SIM",w:57,d:1,k:"SIM",t:"Dia da prova: ENEM",i:"A",m:"Questões"});
-let S;try{S=JSON.parse(localStorage.getItem("enem27")||"")}catch(e){}S=S&&S.c?S:{c:{},u:[],l:[]};
-const save=()=>{try{localStorage.setItem("enem27",JSON.stringify(S))}catch(e){}},up=(id,o)=>{S.c[id]={...S.c[id],...o};save()};
+const SUPABASE_URL="https://rccycaivfaunfmlzmdos.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_-rPhbujFhv0aeg_FOJrrBg_2aa1RwVt";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+let S={c:{},u:[],l:[]},dbId=null,saveQueue=Promise.resolve(),readyResolve;
+const ready=new Promise(r=>readyResolve=r);
+
+async function initDB(){
+  try{
+    let {data:{session}}=await sb.auth.getSession();
+    if(!session){
+      const r=await sb.auth.signInAnonymously();
+      if(r.error)throw r.error;
+      session=r.data.session;
+    }
+    const user=session.user;
+    const r=await sb.from("study_data").select("id,data").eq("user_id",user.id).maybeSingle();
+    if(r.error)throw r.error;
+    if(r.data){
+      dbId=r.data.id;
+      const d=r.data.data;
+      if(d&&typeof d==="object")S={c:d.c||{},u:Array.isArray(d.u)?d.u:[],l:Array.isArray(d.l)?d.l:[]};
+    }else{
+      const ins=await sb.from("study_data").insert({user_id:user.id,data:S}).select("id").single();
+      if(ins.error)throw ins.error;
+      dbId=ins.data.id;
+    }
+  }catch(e){
+    console.error("Erro ao conectar ao Supabase:",e);
+    alert("Não foi possível conectar ao banco de dados. Confira a Publishable Key no código.");
+  }finally{
+    readyResolve();
+  }
+}
+const save=async()=>{
+  await ready;
+  if(!dbId)return;
+  saveQueue=saveQueue.then(async()=>{
+    const r=await sb.from("study_data").update({data:S,updated_at:new Date().toISOString()}).eq("id",dbId);
+    if(r.error)console.error("Erro ao salvar no Supabase:",r.error);
+  }).catch(e=>console.error("Erro ao salvar:",e));
+  return saveQueue;
+};
+const up=(id,o)=>{S.c[id]={...S.c[id],...o};return save()};
 const mg=a=>a.map(c=>({...c,...(S.c[c.id]||{})})).filter(c=>!c.x),cards=w=>mg([...G.filter(c=>c.w==w),...S.u.filter(c=>c.w==w)]),allC=()=>mg([...G,...S.u]);
 const curW=()=>Math.min(57,Math.max(1,Math.floor((new Date()-new Date(2026,10,2))/6048e5)+1));
 let cw=curW(),vw="d",tab="p",cm=new Date(new Date().getFullYear(),new Date().getMonth(),1);
@@ -130,5 +173,6 @@ document.addEventListener("change",e=>{const t=e.target,c=t.closest(".card");if(
 document.addEventListener("dragstart",e=>{const c=e.target.closest&&e.target.closest(".card");if(c)e.dataTransfer.setData("text/plain",c.dataset.id)});
 document.addEventListener("dragover",e=>{if(e.target.closest&&e.target.closest("[data-col]"))e.preventDefault()});
 document.addEventListener("drop",e=>{const col=e.target.closest&&e.target.closest("[data-col]");if(!col)return;e.preventDefault();const id=e.dataTransfer.getData("text/plain"),k=col.dataset.col;if(!id)return;up(id,k[0]=="d"?{d:+k.slice(1)}:{st:k.slice(1)});rp()});
-head();cal();nav();rr();
+head();cal();nav();rr();initDB().then(()=>{head();cal();nav();rr()});
 </script></body></html>
+```
